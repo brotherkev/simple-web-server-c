@@ -1,5 +1,5 @@
-# simple-web-server-cpp
-I don't understand the web. I don't understand servers. I've never made anything in c++. I don't understand git or github. I don't understand markdown documents. This can be fixed. This readme will be split between notes on what I learn (in general) and documentation on this project. 
+# simple-web-server-c
+I don't understand the web. I don't understand servers. I've never made anything in c. I don't understand git or github. I don't understand markdown documents. This can be fixed. This readme will be split between notes on what I learn (in general) and documentation on this project. 
 
 ## the project
 
@@ -15,7 +15,9 @@ However, this brings on notes that can go on and on and on, making me seem stupi
 
 I am making these notes public in case anyone comes across it and thinks they need to know anything before doing things. I don't know anything right now. Everything I make a note on is something I did not have a full understanding on before I started this project. In the first section, you will see an explanation on c++'s file structure, what a header is, and what source code is. Before this project, I was that ignorant. I damn near don't deserve my degree nor my job. I want better than my degree and my job. I am no longer that ignorant.
 
-### notes on c++ and software engineering
+### notes software engineering
+
+I chose C as my starting language because I want to actually understand how it all works. I don't want the abstractions that allow me to "skip" things. I intend to occasionally make something in assembly as well. 
 
 ### notes on servers and the web
 
@@ -26,6 +28,10 @@ I am making these notes public in case anyone comes across it and thinks they ne
 A pull request is a request to merge proposed code with a branch. This is done before a push (merge) into the code and prompts review from others on the project. 
 
 A commit is a bit like saving your game. It's version control, where if you make something that break/corrupts or if your code is deleted, there is a save point to revert to. 
+
+I have stared using terminal commands to control git. This is simpler than using the GUI for several reasons, but mroe than anything, consistency.
+
+github's codespaces is probably the best ide i've used. i think when it comes to software i use, my preferences are decided by reliability and performance (like everyone else in the world.) It's not that I dislike most software, but most software "feels" bloated. I'm not technically proficient enough to explain why or even if it's true. 
 
 
 
