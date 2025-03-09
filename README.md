@@ -3,6 +3,9 @@ I don't understand the web. I don't understand servers. I've never made anything
 
 ## the project
 
+- From what i've gathered, the first step to making a web server is to make a socket. A socket is an endpoint, a point of communication (or a node) with an IP (Internet Protocol) adress and a port which allows data to be sent to a specific application on that IP adress. 
+
+
 ## my notes
 
 ### preface
@@ -17,7 +20,9 @@ I am making these notes public in case anyone comes across it and thinks they ne
 
 ### notes software engineering
 
-I chose C as my starting language because I want to actually understand how it all works. I don't want the abstractions that allow me to "skip" things. I intend to occasionally make something in assembly as well. 
+I chose C as my starting language because I want to actually understand how it all works. I don't want the abstractions that allow me to "skip" things. I want to know how everything works "under the hood." I intend to occasionally make something in assembly as well to further this.
+
+I looked up NASA's "Ten Rules for Safety-Critical Code in C" which taught me a lot, as I looked into anything I didn't understand. I have ten pages of notes from the, but I understand it now. I'll be using this as my style guide, as I want to get to making things. 
 
 ### notes on servers and the web
 
@@ -32,6 +37,12 @@ A commit is a bit like saving your game. It's version control, where if you make
 I have stared using terminal commands to control git. This is simpler than using the GUI for several reasons, but mroe than anything, consistency.
 
 github's codespaces is probably the best ide i've used. i think when it comes to software i use, my preferences are decided by reliability and performance (like everyone else in the world.) It's not that I dislike most software, but most software "feels" bloated. I'm not technically proficient enough to explain why or even if it's true. 
+
+## resources
+
+https://www.geeksforgeeks.org/socket-programming-cc/
+https://www.linuxhowtos.org/C_C++/socket.htm
+
 
 
 
