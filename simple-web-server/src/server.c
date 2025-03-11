@@ -9,6 +9,10 @@
 #include <netinet/in.h> 
 #include "config.h"
 
+void turn_on_server(){
+    
+}
+
 int make_socket(sockfd){ 
     assert(sockfd == NULL);  //sockfd should have no initial value 
     sockfd = socket(AF_INET, SOCK_STREAM, 0); //socket file descriptor, will contain protocols 
@@ -19,9 +23,9 @@ int make_socket(sockfd){
 
 int bind_socket(){
     struct sockaddr_in server_addr; 
-    server_addr.sin_family = FAMILY;
+    server_addr.sin_family = SERVER_FAMILY;
     server_addr.sin_addr.s_addr = SERVER_ADDRESS;
-    server_addr.sin_port = htons(PORT); 
+    server_addr.sin_port = htons(SERVER_PORT); 
 
 
     return 0; 

@@ -6,7 +6,7 @@
 
 //function declaration, variables, and global variables go here
 
-int make_socket(int a); 
+int make_socket(int); 
 int bind_socket(); 
 int listen_for_client();
 int accept_client(); 
