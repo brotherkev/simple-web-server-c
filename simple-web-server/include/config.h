@@ -8,3 +8,4 @@
 #define SERVER_FAMILY "AF_INET" // binds to ipv4 ip addresses
 #define SERVER_ADDRESS "INADDR_ANY" //binds to any/all available ip interfaces
 #define SERVER_BUFFER_SIZE 4096 //
+#define MAXIMUM_NUMBER_OF_PENDING_CONNECTIONS 10

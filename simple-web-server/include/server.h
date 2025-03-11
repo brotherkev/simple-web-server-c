@@ -6,9 +6,9 @@
 
 //function declaration, variables, and global variables go here
 
-int make_socket(int); 
-int bind_socket(); 
-int listen_for_client();
+void make_socket(int* sockfd); 
+int bind_socket(int sockfd); 
+int listen_for_client(int sockfd);
 int accept_client(); 
 int close_server(); 
 
