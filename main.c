@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include "server.h"
+#include "client.h"
 
 int main (){
     int sockfd; 

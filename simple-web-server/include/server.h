@@ -1,13 +1,16 @@
-#ifndef SERVER_H //Header guard: if SERVER_H is not defined
-#define SERVER_H //then define SERVER_H 
-#define PORT 443 //defines https port number 
-#define IP_ADDRESS //defines port 
-#define AF_INET
+//declares shared functions and constants
+
+#ifndef SERVER_H //Header guard:
+#define SERVER_H 
+
 
 //function declaration, variables, and global variables go here
 
-int make_socket(); 
-void bindSocket(); 
+int make_socket(int a); 
+int bind_socket(); 
+int listen_for_client();
+int accept_client(); 
+int close_server(); 
 
 
 
