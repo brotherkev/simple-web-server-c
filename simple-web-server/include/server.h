@@ -10,7 +10,7 @@ void make_socket(int* sockfd);
 int bind_socket(int sockfd); 
 int listen_for_client(int sockfd);
 int accept_client(); 
-int close_server(); 
+void handle_client(int client_sockfd)
 
 
 
