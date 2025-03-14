@@ -9,3 +9,4 @@
 #define SERVER_ADDRESS "INADDR_ANY" //binds to any/all available ip interfaces
 #define SERVER_BUFFER_SIZE 4096 //
 #define MAXIMUM_NUMBER_OF_PENDING_CONNECTIONS 10
+#define SERVER_IP_ADDRESS "127.0.0.1" 
