@@ -19,8 +19,11 @@ void turn_on_server(){
         close(sockfd);
         exit(EXIT_FAILURE);
     } 
-    listen_for_client(sockfd);
-    
+    if(listen_for_client(sockfd) == -1){
+        perror("listening for socket failed");
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
     // Main server loop
     while (1) {
         int client_sockfd = accept_client(sockfd);
@@ -65,7 +68,7 @@ int bind_socket(int sockfd){
 
 int listen_for_client(int sockfd){
     if (listen(sockfd, MAXIMUM_NUMBER_OF_PENDING_CONNECTIONS) == -1) { //MAXIMUM_NUMBER can be changed in config.h
-        perror("listen failed");
+        perror("listen_for_client failed");
         close(sockfd);
         return -1;
     }
@@ -77,20 +80,13 @@ int accept_client(int sockfd){
     struct sockaddr_in client_addr; 
     socklen_t client_len = sizeof(client_addr);
     int new_socket; 
-
-    printf("waiting for connections...\n");
-
-    //accept the connection from client
-
     new_socket = accept(sockfd, (struct sockaddr*)&client_addr, &client_len);
     if (new_socket < 0){
         perror("accept failed");
         return -1; 
     }
-
-    printf("client connection accepted\n");
-
-    return new_socket; 
+    printf("Client connected: %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+    return new_socket;
 }
 
 void handle_client(int client_sockfd) {
@@ -101,14 +97,19 @@ void handle_client(int client_sockfd) {
         // parse HTTP request here
         printf("Received request:\n%s\n", buffer);
         
-        // wend a basic HTTP response
+        // send a basic HTTP response
         const char *response = "HTTP/1.1 200 OK\r\n"
                                "Content-Type: text/html\r\n"
                                "Connection: close\r\n"
+                               "Content-Length: 43\r\n"
                                "\r\n"
                                "<html><body><h1>Hello, World!</h1></body></html>";
         write(client_sockfd, response, strlen(response));
     }
-    
     close(client_sockfd);
+}
+
+int parse_http_request(){
+
+    return 0; 
 }
