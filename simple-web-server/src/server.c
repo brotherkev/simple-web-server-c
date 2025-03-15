@@ -2,23 +2,17 @@
 
 #include <stdio.h> 
 #include <stdlib.h> 
-#include "server.h" //provides Httprequest struct, and functions
 #include <sys/socket.h> 
 #include <sys/types.h>
 #include <assert.h> 
 #include <netinet/in.h> 
 #include "config.h" // SERVER_ADDRESS/SERVER_FAMILY/SERVER_PORT MACROS, 
+#include "server.h" //provides httprequest struct and other functions
 #include <unistd.h> //for read, write, and close functions
 #include <string.h> //for strlen() 
 #include <sys/stat.h> // for stat()
 #include <fcntl.h> // for open()
 #include <signal.h> 
-
-typedef struct {
-    char method[16];  // e.g., "GET"
-    char path[256];   // e.g., "/index.html"
-    char version[16]; // e.g., "HTTP/1.1"
-} HttpRequest;
 
 
 volatile sig_atomic_t shutdown_server = 0; 
@@ -71,25 +65,28 @@ void make_socket(int* sockfd){
     }
 }
 
-int bind_socket(int sockfd){
-    struct sockaddr_in server_addr; 
-    memset(&server_addr, 0, sizeof(server_addr)); //zeroes struct. deals with garbage values. 
+int bind_socket(int sockfd) {
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr)); // Zero out the struct
 
-    server_addr.sin_family = SERVER_FAMILY; //server family can be changed in config.h
-    server_addr.sin_addr.s_addr = htonl(SERVER_ADDRESS); //SERVER_ADDRESS can be changed in config.h
-    server_addr.sin_port = htons(SERVER_PORT); //SERVER_PORT can be changed in config.h
-
-    int opt = 1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-        perror("setsockopt failed");
+    // Set up the server address
+    server_addr.sin_family = SERVER_FAMILY; // Use the address family from config.h
+    server_addr.sin_port = htons(SERVER_PORT); // Convert port to network byte order
+    
+    // Convert the IP address from string to binary
+    if (inet_pton(SERVER_FAMILY, SERVER_ADDRESS, &server_addr.sin_addr) <= 0) {
+        perror("Invalid address or address not supported");
         return -1;
     }
+    printf("Binding to address: %s, port: %d\n", SERVER_ADDRESS, SERVER_PORT);
 
+    // Bind the socket to the server address
     if (bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-        perror("binding failed");
+        perror("Binding failed");
         return -1;
     }
-    printf("Server successfully bound to port %d.\n", SERVER_PORT);
+
+    printf("Server successfully bound to %s:%d\n", SERVER_ADDRESS, SERVER_PORT);
     return 0;
 }
 
