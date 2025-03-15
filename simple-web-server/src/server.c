@@ -26,6 +26,7 @@ void handle_signal(int signal) {
 
 void turn_on_server(){
     int sockfd = -1; 
+    printf(sockfd);
     make_socket(&sockfd);
     if(bind_socket(sockfd)==-1){
         perror("binding of server socket failed\n");
@@ -55,14 +56,14 @@ void turn_on_server(){
 }
 
 
-void make_socket(int* sockfd){ 
-    assert(sockfd != NULL);   
-    *sockfd = socket(AF_INET, SOCK_STREAM, 0); //socket file descriptor, will contain protocols 
-    //socket is on ipv4 protocol, uses TCP and TCP's default protocol (which is what 0 does). 
-    if (*sockfd == -1) {  
+void make_socket(int* sockfd) {
+    assert(sockfd != NULL); // Ensure sockfd is not NULL
+    *sockfd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP socket
+    if (*sockfd == -1) {
         perror("Socket creation failed");
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE); // Exit if socket creation fails
     }
+    printf("Socket created successfully: sockfd = %d\n", *sockfd); // Debug print
 }
 
 int bind_socket(int sockfd) {
@@ -78,7 +79,7 @@ int bind_socket(int sockfd) {
         perror("Invalid address or address not supported");
         return -1;
     }
-    printf("Binding to address: %s, port: %d\n", SERVER_ADDRESS, SERVER_PORT);
+    
 
     // Bind the socket to the server address
     if (bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
