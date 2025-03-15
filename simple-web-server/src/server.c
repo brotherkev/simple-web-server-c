@@ -13,8 +13,12 @@
 
 void turn_on_server(){
     int sockfd = -1; 
-    make_socket(&sockfd); 
-    bind_socket(sockfd);
+    make_socket(&sockfd);
+    if(bind_socket(sockfd)==-1){
+        perror("binding of server socket failed\n");
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    } 
     listen_for_client(sockfd);
     
     // Main server loop
