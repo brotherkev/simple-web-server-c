@@ -13,12 +13,12 @@
 
 void make_client(){
 
-    int sockfd; 
-    make_socket(&sockfd); 
-    connect_server(sockfd);
-    send_request(sockfd);
+    int sockfd;
+    make_socket(&sockfd);
+    if (connect_server(sockfd) == 0) {
+        send_request(sockfd);
+    }
     close(sockfd);
-    
 }
 
 void make_socket(int* sockfd){
@@ -31,22 +31,22 @@ void make_socket(int* sockfd){
     }
 }
 
-void connect_server(int sockfd) {
+int connect_server(int sockfd) {
     struct sockaddr_in server_addr;
 
-    // Configure server address
+    // configure server address
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
     
-    // Convert IP address to binary
+    // convert IP address to binary
     if (inet_pton(AF_INET, SERVER_IP_ADDRESS, &server_addr.sin_addr) <= 0) {
         perror("Invalid address or address not supported");
         close(sockfd);
         exit(EXIT_FAILURE);
     }
     
-    // Connect to server
+    // connect to server
     if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("Connection failed");
         close(sockfd);
@@ -60,13 +60,13 @@ void connect_server(int sockfd) {
 void send_request(int sockfd) {
     char buffer[4096];
     
-    // Prepare HTTP request
+    // prepare HTTP request
     const char *http_request = "GET / HTTP/1.1\r\n"
                               "Host: localhost\r\n"
                               "Connection: close\r\n"
                               "\r\n";
     
-    // Send HTTP request
+    // send HTTP request
     if (write(sockfd, http_request, strlen(http_request)) != strlen(http_request)) {
         perror("Failed to send complete request");
         close(sockfd);
@@ -75,7 +75,7 @@ void send_request(int sockfd) {
     
     printf("HTTP request sent, awaiting response...\n");
     
-    // Read and display response
+    // read and display response
     ssize_t bytes_read;
     while ((bytes_read = read(sockfd, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[bytes_read] = '\0';  // Null-terminate the received data

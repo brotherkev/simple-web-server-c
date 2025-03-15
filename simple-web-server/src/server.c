@@ -100,7 +100,7 @@ void handle_client(int client_sockfd) {
         if (parse_http_request(buffer, &request) == 0) {
             printf("Method: %s, Path: %s, Version: %s\n", request.method, request.path, request.version);
             
-            // Serve files based on the path
+            // serve files based on the path
             serve_file(client_sockfd, request.path);
         } else {
             const char *response = "HTTP/1.1 400 Bad Request\r\n\r\n";
@@ -153,22 +153,23 @@ void serve_file(int client_sockfd, const char *path) {
         return;
     }
 
-    // Get file size
+    // get file size
     struct stat file_stat;
     fstat(file_fd, &file_stat);
     off_t file_size = file_stat.st_size;
 
-    // Send HTTP headers
+    // send HTTP headers
     char headers[1024];
+    const char *mime_type = get_mime_type(file_path);
     snprintf(headers, sizeof(headers),
              "HTTP/1.1 200 OK\r\n"
              "Content-Type: text/html\r\n"
              "Content-Length: %ld\r\n"
              "Connection: close\r\n"
-             "\r\n", file_size);
+             "\r\n", mime_type, file_size);
     write(client_sockfd, headers, strlen(headers));
 
-    // Send file content
+    // send file content
     char file_buffer[4096];
     ssize_t bytes_read;
     while ((bytes_read = read(file_fd, file_buffer, sizeof(file_buffer))) > 0) {
@@ -176,4 +177,14 @@ void serve_file(int client_sockfd, const char *path) {
     }
 
     close(file_fd);
+}
+
+const char* get_mime_type(const char* path) {
+    if (strstr(path, ".html")) return "text/html";
+    if (strstr(path, ".css")) return "text/css";
+    if (strstr(path, ".js")) return "application/javascript";
+    if (strstr(path, ".jpg") || strstr(path, ".jpeg")) return "image/jpeg";
+    if (strstr(path, ".png")) return "image/png";
+    if (strstr(path, ".gif")) return "image/gif";
+    return "application/octet-stream";
 }
