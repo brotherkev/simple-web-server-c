@@ -2,14 +2,16 @@
 
 #include <stdio.h> 
 #include <stdlib.h> 
-#include "server.h"
+#include "server.h" //provides Httprequest struct, and functions
 #include <sys/socket.h> 
 #include <sys/types.h>
 #include <assert.h> 
 #include <netinet/in.h> 
-#include "config.h" 
+#include "config.h" // SERVER_ADDRESS/SERVER_FAMILY/SERVER_PORT MACROS, 
 #include <unistd.h> //for read, write, and close functions
 #include <string.h> //for strlen() 
+#include <sys/stat.h> // for stat()
+#include <fcntl.h> // for open()
 
 void turn_on_server(){
     int sockfd = -1; 
@@ -94,22 +96,84 @@ void handle_client(int client_sockfd) {
     ssize_t bytes_read = read(client_sockfd, buffer, sizeof(buffer) - 1);
     
     if (bytes_read > 0) {
-        // parse HTTP request here
-        printf("Received request:\n%s\n", buffer);
-        
-        // send a basic HTTP response
-        const char *response = "HTTP/1.1 200 OK\r\n"
-                               "Content-Type: text/html\r\n"
-                               "Connection: close\r\n"
-                               "Content-Length: 43\r\n"
-                               "\r\n"
-                               "<html><body><h1>Hello, World!</h1></body></html>";
-        write(client_sockfd, response, strlen(response));
+        HttpRequest request;
+        if (parse_http_request(buffer, &request) == 0) {
+            printf("Method: %s, Path: %s, Version: %s\n", request.method, request.path, request.version);
+            
+            // Serve files based on the path
+            serve_file(client_sockfd, request.path);
+        } else {
+            const char *response = "HTTP/1.1 400 Bad Request\r\n\r\n";
+            write(client_sockfd, response, strlen(response));
+        }
     }
+    
     close(client_sockfd);
 }
 
-int parse_http_request(){
+int parse_http_request(const char *request, HttpRequest *parsed_request){
+    // example request: "GET /index.html HTTP/1.1\r\nHost: localhost\r\n..."
+    char buffer[1024];
+    strncpy(buffer, request, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
 
-    return 0; 
+    // tokenize the request line
+    char *method = strtok(buffer, " ");
+    char *path = strtok(NULL, " ");
+    char *version = strtok(NULL, "\r\n");
+
+    if (!method || !path || !version) { //if no method, no path, or no version
+        return -1; // invalid request
+    }
+
+    // copy parsed values into the struct
+    strncpy(parsed_request->method, method, sizeof(parsed_request->method) - 1);
+    strncpy(parsed_request->path, path, sizeof(parsed_request->path) - 1);
+    strncpy(parsed_request->version, version, sizeof(parsed_request->version) - 1);
+
+    return 0;  
+}
+
+void serve_file(int client_sockfd, const char *path) {
+    // Default to "index.html" if the path is "/"
+    char file_path[256];
+    if (strcmp(path, "/") == 0) {
+        strcpy(file_path, "index.html");
+    } else {
+        // Remove leading '/' from the path
+        strncpy(file_path, path + 1, sizeof(file_path) - 1);
+    }
+
+    // Open the file
+    int file_fd = open(file_path, O_RDONLY);
+    if (file_fd < 0) {
+        // File not found
+        const char *response = "HTTP/1.1 404 Not Found\r\n\r\n";
+        write(client_sockfd, response, strlen(response));
+        return;
+    }
+
+    // Get file size
+    struct stat file_stat;
+    fstat(file_fd, &file_stat);
+    off_t file_size = file_stat.st_size;
+
+    // Send HTTP headers
+    char headers[1024];
+    snprintf(headers, sizeof(headers),
+             "HTTP/1.1 200 OK\r\n"
+             "Content-Type: text/html\r\n"
+             "Content-Length: %ld\r\n"
+             "Connection: close\r\n"
+             "\r\n", file_size);
+    write(client_sockfd, headers, strlen(headers));
+
+    // Send file content
+    char file_buffer[4096];
+    ssize_t bytes_read;
+    while ((bytes_read = read(file_fd, file_buffer, sizeof(file_buffer))) > 0) {
+        write(client_sockfd, file_buffer, bytes_read);
+    }
+
+    close(file_fd);
 }
