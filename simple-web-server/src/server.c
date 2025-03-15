@@ -26,7 +26,6 @@ void handle_signal(int signal) {
 
 void turn_on_server(){
     int sockfd = -1; 
-    printf(sockfd);
     make_socket(&sockfd);
     if(bind_socket(sockfd)==-1){
         perror("binding of server socket failed\n");
@@ -34,7 +33,7 @@ void turn_on_server(){
         exit(EXIT_FAILURE);
     } 
     if(listen_for_client(sockfd) == -1){
-        perror("listening for socket failed");
+        perror("listening for socket failed\n");
         close(sockfd);
         exit(EXIT_FAILURE);
     }
@@ -60,7 +59,7 @@ void make_socket(int* sockfd) {
     assert(sockfd != NULL); // Ensure sockfd is not NULL
     *sockfd = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP socket
     if (*sockfd == -1) {
-        perror("Socket creation failed");
+        perror("Socket creation failed\n");
         exit(EXIT_FAILURE); // Exit if socket creation fails
     }
     printf("Socket created successfully: sockfd = %d\n", *sockfd); // Debug print
@@ -76,7 +75,7 @@ int bind_socket(int sockfd) {
     
     // Convert the IP address from string to binary
     if (inet_pton(SERVER_FAMILY, SERVER_ADDRESS, &server_addr.sin_addr) <= 0) {
-        perror("Invalid address or address not supported");
+        perror("Invalid address or address not supported\n");
         return -1;
     }
     
