@@ -14,7 +14,15 @@
 #include <fcntl.h> // for open()
 #include <signal.h> 
 
+typedef struct {
+    char method[16];  // e.g., "GET"
+    char path[256];   // e.g., "/index.html"
+    char version[16]; // e.g., "HTTP/1.1"
+} HttpRequest;
+
+
 volatile sig_atomic_t shutdown_server = 0; 
+
 
 void handle_signal(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
@@ -109,6 +117,7 @@ int accept_client(int sockfd){
 }
 
 void handle_client(int client_sockfd) {
+    
     char *buffer = malloc(4096); // Dynamically allocate buffer
     if (!buffer) {
         perror("Failed to allocate memory for buffer");

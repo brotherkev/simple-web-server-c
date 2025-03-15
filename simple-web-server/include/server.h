@@ -15,11 +15,6 @@ int accept_client(int sockfd);
 void handle_client(int client_sockfd);
 int parse_http_request(const char *request, HttpRequest *parsed_request);
 
-typedef struct {
-    char method[16];  // e.g., "GET"
-    char path[256];   // e.g., "/index.html"
-    char version[16]; // e.g., "HTTP/1.1"
-} HttpRequest;
 
 
 #endif
