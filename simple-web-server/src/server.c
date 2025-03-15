@@ -12,6 +12,15 @@
 #include <string.h> //for strlen() 
 #include <sys/stat.h> // for stat()
 #include <fcntl.h> // for open()
+#include <signal.h> 
+
+volatile sig_atomic_t shutdown_server = 0; 
+
+void handle_signal(int signal) {
+    if (signal == SIGINT || signal == SIGTERM) {
+        shutdown_server = 1;
+    }
+}
 
 void turn_on_server(){
     int sockfd = -1; 
@@ -26,13 +35,21 @@ void turn_on_server(){
         close(sockfd);
         exit(EXIT_FAILURE);
     }
-    // Main server loop
-    while (1) {
+
+    // set up signal handler for graceful shutdown
+    signal(SIGINT, handle_signal);
+    signal(SIGTERM, handle_signal);
+
+    // main server loop
+    while (!shutdown_server) {
         int client_sockfd = accept_client(sockfd);
         if (client_sockfd >= 0) {
             handle_client(client_sockfd);
         }
     }
+
+    printf("Shutting down server...\n");
+    close(sockfd);
 }
 
 
@@ -92,22 +109,27 @@ int accept_client(int sockfd){
 }
 
 void handle_client(int client_sockfd) {
-    char buffer[4096] = {0};
-    ssize_t bytes_read = read(client_sockfd, buffer, sizeof(buffer) - 1);
-    
+    char *buffer = malloc(4096); // Dynamically allocate buffer
+    if (!buffer) {
+        perror("Failed to allocate memory for buffer");
+        close(client_sockfd);
+        return;
+    }
+
+    ssize_t bytes_read = read(client_sockfd, buffer, 4096 - 1);
     if (bytes_read > 0) {
+        buffer[bytes_read] = '\0'; // Null-terminate the buffer
         HttpRequest request;
         if (parse_http_request(buffer, &request) == 0) {
             printf("Method: %s, Path: %s, Version: %s\n", request.method, request.path, request.version);
-            
-            // serve files based on the path
             serve_file(client_sockfd, request.path);
         } else {
             const char *response = "HTTP/1.1 400 Bad Request\r\n\r\n";
             write(client_sockfd, response, strlen(response));
         }
     }
-    
+
+    free(buffer); // Free the allocated memory
     close(client_sockfd);
 }
 
@@ -137,11 +159,22 @@ int parse_http_request(const char *request, HttpRequest *parsed_request){
 void serve_file(int client_sockfd, const char *path) {
     // Default to "index.html" if the path is "/"
     char file_path[256];
+    const char *document_root = "."; //server's document root
+
+   //construct full server path
+
     if (strcmp(path, "/") == 0) {
-        strcpy(file_path, "index.html");
+        snprintf(file_path, sizeof(file_path), "%s/index.html", document_root);
     } else {
-        // Remove leading '/' from the path
-        strncpy(file_path, path + 1, sizeof(file_path) - 1);
+        snprintf(file_path, sizeof(file_path), "%s%s", document_root, path);
+    }
+
+
+    //file path validation; prevents traversal attacks. 
+    if (strstr(file_path, "../") != NULL) {
+        const char *response = "HTTP/1.1 403 Forbidden\r\n\r\n";
+        write(client_sockfd, response, strlen(response));
+        return;
     }
 
     // Open the file
