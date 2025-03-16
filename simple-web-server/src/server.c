@@ -96,25 +96,34 @@ int listen_for_client(int sockfd){
         close(sockfd);
         return -1;
     }
+    printf("Server listening on port %d...\n", SERVER_PORT); // Debug print
     return 0;
 }
 
-int accept_client(int sockfd){
-
-    struct sockaddr_in client_addr; 
+int accept_client(int sockfd) {
+    struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
-    int new_socket; 
-    new_socket = accept(sockfd, (struct sockaddr*)&client_addr, &client_len);
-    if (new_socket < 0){
+    memset(&client_addr, 0, client_len); // Zero out the struct
+
+    int new_socket = accept(sockfd, (struct sockaddr*)&client_addr, &client_len);
+    if (new_socket < 0) {
         perror("accept failed");
-        return -1; 
+        return -1;
     }
-    printf("Client connected: %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+
+    char *client_ip = inet_ntoa(client_addr.sin_addr);
+    if (client_ip == NULL) {
+        perror("inet_ntoa failed");
+        close(new_socket);
+        return -1;
+    }
+
+    printf("Client connected.\n");
+    //   printf("Client connected: %s:%d\n", client_ip, ntohs(client_addr.sin_port));
     return new_socket;
 }
 
 void handle_client(int client_sockfd) {
-    
     char *buffer = malloc(4096); // Dynamically allocate buffer
     if (!buffer) {
         perror("Failed to allocate memory for buffer");

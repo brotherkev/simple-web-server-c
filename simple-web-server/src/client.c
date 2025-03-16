@@ -76,12 +76,12 @@ void send_request(int sockfd) {
         return;
     }
 
-    // Prepare HTTP request with keep-alive
+    // Prepare HTTP request
     char http_request[1024];
     snprintf(http_request, sizeof(http_request),
              "GET %s HTTP/1.1\r\n"
              "Host: localhost\r\n"
-             "Connection: keep-alive\r\n"
+             "Connection: close\r\n"
              "\r\n", path);
 
     // Send HTTP request
@@ -94,16 +94,35 @@ void send_request(int sockfd) {
 
     printf("HTTP request sent, awaiting response...\n");
 
-    // Read and display response
+    // Read and save the response to a temporary file
+    FILE *temp_file = fopen("temp.html", "w");
+    if (!temp_file) {
+        perror("Failed to create temporary file");
+        free(buffer);
+        close(sockfd);
+        return;
+    }
+
     ssize_t bytes_read;
     while ((bytes_read = read(sockfd, buffer, 4096 - 1)) > 0) {
         buffer[bytes_read] = '\0';  // Null-terminate the received data
-        printf("%s", buffer);
+        fputs(buffer, temp_file);   // Write the response to the file
     }
 
-    if (bytes_read < 0) {
-        perror("Read error");
-    }
+    fclose(temp_file);
+    free(buffer);
+    close(sockfd);
 
-    free(buffer); // Free the allocated memory
+    // Open the temporary file in the default web browser
+    printf("Opening response in web browser...\n");
+
+    #ifdef __linux__
+        system("xdg-open temp.html"); // For Linux
+    #elif __APPLE__
+        system("open temp.html");     // For macOS
+    #elif _WIN32
+        system("start temp.html");    // For Windows
+    #else
+        printf("Unsupported platform. Please open temp.html manually.\n");
+    #endif
 }
