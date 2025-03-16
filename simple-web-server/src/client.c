@@ -1,26 +1,13 @@
-//creates socket. connects to the serverer. sends http requests. receives http responses.
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> //for memset
-#include <unistd.h> //for close, read, write
+#include <string.h>
+#include <unistd.h>
 #include <sys/socket.h>
-#include <assert.h> 
 #include <netinet/in.h>
-#include <arpa/inet.h> //for inet_pton
+#include <arpa/inet.h>
 #include "config.h"
-#include "client.h" //for make_socket, connect_server, and send_request
 
-void make_client() {
-    int sockfd;
-    make_socket(&sockfd);
-    if (connect_server(sockfd) == 0) {
-        send_request(sockfd);
-    }
-    close(sockfd);
-}
-
-void make_socket(int* sockfd) {
-    assert(sockfd != NULL);
+void create_socket(int *sockfd) {
     *sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (*sockfd == -1) {
         perror("Socket creation failed");
@@ -28,22 +15,18 @@ void make_socket(int* sockfd) {
     }
 }
 
-int connect_server(int sockfd) {
+void connect_to_server(int sockfd) {
     struct sockaddr_in server_addr;
-
-    // Configure server address
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
 
-    // Convert IP address to binary
     if (inet_pton(AF_INET, SERVER_IP_ADDRESS, &server_addr.sin_addr) <= 0) {
         perror("Invalid address or address not supported");
         close(sockfd);
         exit(EXIT_FAILURE);
     }
 
-    // Connect to server
     if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("Connection failed");
         close(sockfd);
@@ -51,32 +34,9 @@ int connect_server(int sockfd) {
     }
 
     printf("Connected to server at %s:%d\n", SERVER_IP_ADDRESS, SERVER_PORT);
-    return 0;
 }
 
-void send_request(int sockfd) {
-    char *buffer = malloc(4096); // Dynamically allocate buffer
-    if (!buffer) {
-        perror("Failed to allocate memory for buffer");
-        close(sockfd);
-        return;
-    }
-
-    // Allow the user to specify the path
-    char path[256];
-    printf("Enter the path to request (e.g., /index.html): ");
-    fgets(path, sizeof(path), stdin);
-    path[strcspn(path, "\n")] = '\0'; // Remove newline character
-
-    // Validate the path
-    if (path[0] != '/') {
-        fprintf(stderr, "Invalid path: Path must start with '/'\n");
-        free(buffer);
-        close(sockfd);
-        return;
-    }
-
-    // Prepare HTTP request
+void send_request(int sockfd, const char *path) {
     char http_request[1024];
     snprintf(http_request, sizeof(http_request),
              "GET %s HTTP/1.1\r\n"
@@ -84,45 +44,66 @@ void send_request(int sockfd) {
              "Connection: close\r\n"
              "\r\n", path);
 
-    // Send HTTP request
     if (write(sockfd, http_request, strlen(http_request)) != strlen(http_request)) {
         perror("Failed to send complete request");
-        free(buffer);
         close(sockfd);
         exit(EXIT_FAILURE);
     }
 
     printf("HTTP request sent, awaiting response...\n");
+}
 
-    // Read and save the response to a temporary file
+void save_response(int sockfd) {
+    char buffer[4096];
     FILE *temp_file = fopen("temp.html", "w");
     if (!temp_file) {
         perror("Failed to create temporary file");
-        free(buffer);
         close(sockfd);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     ssize_t bytes_read;
-    while ((bytes_read = read(sockfd, buffer, 4096 - 1)) > 0) {
-        buffer[bytes_read] = '\0';  // Null-terminate the received data
-        fputs(buffer, temp_file);   // Write the response to the file
+    while ((bytes_read = read(sockfd, buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[bytes_read] = '\0';
+        fputs(buffer, temp_file);
     }
 
     fclose(temp_file);
-    free(buffer);
-    close(sockfd);
+    printf("Response saved to temp.html\n");
+}
 
-    // Open the temporary file in the default web browser
-    printf("Opening response in web browser...\n");
-
+void open_response_in_browser() {
     #ifdef __linux__
-        system("xdg-open temp.html"); // For Linux
+        system("xdg-open temp.html");
     #elif __APPLE__
-        system("open temp.html");     // For macOS
+        system("open temp.html");
     #elif _WIN32
-        system("start temp.html");    // For Windows
+        system("start temp.html");
     #else
         printf("Unsupported platform. Please open temp.html manually.\n");
     #endif
+}
+
+int main() {
+    int sockfd;
+    create_socket(&sockfd);
+    connect_to_server(sockfd);
+
+    char path[256];
+    printf("Enter the path to request (e.g., /index.html): ");
+    fgets(path, sizeof(path), stdin);
+    path[strcspn(path, "\n")] = '\0';
+
+    if (path[0] != '/') {
+        fprintf(stderr, "Invalid path: Path must start with '/'\n");
+        close(sockfd);
+        return EXIT_FAILURE;
+    }
+
+    send_request(sockfd, path);
+    save_response(sockfd);
+    open_response_in_browser();
+
+    close(sockfd);
+    return 0;
 }

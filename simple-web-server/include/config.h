@@ -4,7 +4,7 @@
 
 //socket binds for server
 
-#define SERVER_PORT 8080 //defines port number 
+#define SERVER_PORT 8081 //defines port number 
 #define SERVER_FAMILY AF_INET // binds to ipv4 ip addresses
 #define SERVER_ADDRESS "127.0.0.1" //binds to any/all available ip interfaces
 #define SERVER_BUFFER_SIZE 4096 //
